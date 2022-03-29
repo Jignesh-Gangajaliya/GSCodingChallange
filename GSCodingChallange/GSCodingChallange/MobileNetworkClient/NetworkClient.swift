@@ -21,9 +21,10 @@ class NetworkClientImpl: NetworkClient {
         guard let url = url else {
             return completionHandler(.failure(.invalidURL))
         }
-        print("Request", url.absoluteString)
+        if Reachability.isConnectedToNetwork() == false {
+            return completionHandler(.failure(.noNetwork))
+        }
         URLSession.shared.dataTask(with: url) { (data, httpUrlResponse, error) in
-            print("response", data)
             if let error = error {
                 completionHandler(.failure(.network(error)))
             }

@@ -14,13 +14,18 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         let service = NASAServiceImpl(apiService: NetworkClientImpl())
-        let viewModel = PODViewModelImpl(service: service)
+        let removeFavouriteService = RemoveFavouriteServiceImpl()
+        let viewModel = POTDViewModelImpl(service: service, removeFavouriteService: removeFavouriteService)
         let viewControllee = POTDViewController(viewModel: viewModel)
         let navigationController = UINavigationController(rootViewController: viewControllee)
         viewModel.delegate = viewControllee
         window = UIWindow(windowScene: windowScene)
         window?.rootViewController = navigationController
         window?.makeKeyAndVisible()
+    }
+    
+    func sceneDidEnterBackground(_ scene: UIScene) {
+        PersistentStorage.shared.saveContext()
     }
 }
 

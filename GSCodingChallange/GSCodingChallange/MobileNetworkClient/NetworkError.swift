@@ -10,5 +10,6 @@ import Foundation
 public enum NetworkError: Error {
     case invalidURL
     case emptyData
+    case noNetwork
     case network(Error)
 }

@@ -12,6 +12,16 @@ class POTDViewController: UIViewController, PODViewDelegate, ActivityIndicatorPr
     private let viewModel: POTDViewModel
     var activityIndicator = UIActivityIndicatorView()
     
+    var isPOTDFavorite: Bool = false {
+        didSet {
+            if isPOTDFavorite {
+                favoriteActionButton.setTitle("Delete from favourite", for: .normal)
+            } else {
+                favoriteActionButton.setTitle("Add to favourite", for: .normal)
+            }
+        }
+    }
+    
     private let imageView: GSImageView = {
        let imageView = GSImageView()
         imageView.contentMode = .scaleToFill
@@ -24,7 +34,6 @@ class POTDViewController: UIViewController, PODViewDelegate, ActivityIndicatorPr
     private let favoriteActionButton: UIButton = {
        let button = UIButton()
         button.backgroundColor = .systemBlue
-        button.setTitle("Add favorite", for: .normal)
        return button
     }()
     
@@ -113,11 +122,16 @@ class POTDViewController: UIViewController, PODViewDelegate, ActivityIndicatorPr
         scrollViewContainer.addArrangedSubview(imageView)
         scrollViewContainer.addArrangedSubview(explanationLabel)
         scrollViewContainer.addArrangedSubview(favoriteActionButton)
+        favoriteActionButton.addTarget(self, action: #selector(handleFavoriteAction(_:)), for: .touchUpInside)
         addScrollViewConstraint()
         addMainViewOfScrollView()
         addSearchTextFieldConstraint()
         applyDatePicker()
         loadPicOfTheDay()
+    }
+    
+    @objc func handleFavoriteAction(_ sender: UIButton) {
+        viewModel.shouldFavoritePOTD(isfavorite: isPOTDFavorite)
     }
     
     private func addSearchTextFieldConstraint() {
@@ -142,7 +156,11 @@ class POTDViewController: UIViewController, PODViewDelegate, ActivityIndicatorPr
     }
     
     @objc func showFavorite() {
-        
+        let service = RetriveFavouriteServiceImpl()
+        let favouriteViewModel = FavouriteViewModelImpl(databaseService: service)
+        let favouriteList = FavouriteViewController(viewModel: favouriteViewModel)
+        favouriteViewModel.delegate = favouriteList
+        navigationController?.pushViewController(favouriteList, animated: true)
     }
     
     private func addMainViewOfScrollView() {
@@ -189,6 +207,8 @@ class POTDViewController: UIViewController, PODViewDelegate, ActivityIndicatorPr
     
     func showError(error: String) {
         hideActivityIndicator()
+        let alert = UIAlertController(title: "Error", message: error, preferredStyle: .alert)
+        present(alert, animated: true)
     }
     
     func displayPicOfTheDay(data: PictureOfTheDay) {
@@ -199,10 +219,16 @@ class POTDViewController: UIViewController, PODViewDelegate, ActivityIndicatorPr
     }
     
     private func setupDataToDisplay(data: PictureOfTheDay) {
+        isPOTDFavorite = false
         dateLabel.text = data.date
         titleLabel.text = data.title
         explanationLabel.text = data.explanation
         imageView.loadImage(from: data.url)
+        viewModel.checkFavouritePOTD()
+    }
+    
+    func showFavuoriteTitleButton(isFavourite: Bool) {
+        self.isPOTDFavorite = isFavourite
     }
 }
 
